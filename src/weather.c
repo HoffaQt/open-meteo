@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "../include/weather.h"
+#include "weather.h"
 
 char* getWeather()
 {
