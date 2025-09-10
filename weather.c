@@ -59,5 +59,5 @@ char* getWeather()
     {
         return NULL;
     }
-
+    return NULL;
 }
