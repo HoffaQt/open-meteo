@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "weather.h"
+#include "../include/weather.h"
 
 int main()
 {

@@ -1,24 +1,39 @@
-CC := gcc
-CFLAGS := -std=c99 -Wall -Wextra
-SRC := $(wildcard *.c)
-OBJ := $(SRC:.c=.o)
-DEP := $(OBJ:.o=.d)
-BIN := main
+# --- Basvariabler --
+CC 		 ?= gcc
+CFLAGS ?= -std=c11 -Wall -Wextra -O2 -MMD -MP
+SRC := $(wildcard src/*.c)
+MODE ?= release
 
+ifeq ($(MODE),debug)
+ CFLAGS += -g -O0
+ OUTDIR := build/debug
+else
+ OUTDIR := build/release
+endif
+
+OBJ := $(patsubst src/%.c, $(OUTDIR)/%.o, $(SRC)) # TODO: mappa src/%.c -> build/%.o
+BIN := $(OUTDIR)/app
+DEP := $(OBJ:.o=.d) # TODO: mappa build/%.o -> build/%.d
+
+# --- Standardmål --
 all: $(BIN)
 
 $(BIN): $(OBJ)
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) $^ -o $@
+				
+$(OUTDIR)/%.o: src/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c  $< -o $@ -MF $(basename $@).d -MT $@
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-run: $(BIN)
-	./$(BIN)
-
+				
+ # --- Kompilering (mönsterregel) --
+# TODO: skapa build/ om den saknas; kompilera src/%.c till build/%.o
+ # TODO: (sen) skriv .d-filer till rätt plats med -MF och rätt mål med -MT
+ # --- Städning --
 clean:
-	$(RM) $(BIN) $(OBJ) $(DEP)
+	$(RM) -r build
 	
 -include $(DEP)
-	
-.PHONY: all run clean
+
+.PHONY: all clean
