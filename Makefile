@@ -34,6 +34,9 @@ $(OUTDIR)/%.o: src/%.c
 clean:
 	$(RM) -r build
 	
+run: $(BIN)
+	./$(BIN)
+	
 -include $(DEP)
 
 .PHONY: all clean

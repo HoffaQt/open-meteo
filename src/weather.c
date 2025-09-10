@@ -44,7 +44,7 @@ char* getWeather()
     sscanf(input, "%d", &choice);
     choice = choice - 1; //Adjust for 0 index array
 
-    if(choice >= 0 && choice <= counter)
+    if(choice >= 0 && choice < counter)
     {
         printf("%s\n", cityArr[choice].city);
         sprintf(url, "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current_weather=true\n", cityArr[choice].lat, cityArr[choice].lon);
@@ -52,7 +52,7 @@ char* getWeather()
         //return weatherUrl;
         return url;
     }
-    else if(choice < -1 || choice >= counter)
+    else if(choice < -1 || choice == counter || choice > counter)
     {
         return("City not found\n");
     }
