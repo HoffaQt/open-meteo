@@ -4,3 +4,5 @@ build/release/app
 build/debug/app
 *.o
 *.d
+.vscode/
+*.exe
