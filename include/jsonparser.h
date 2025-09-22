@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
-typedef struct {
+typedef struct CurrentWeather{
   char time[32];
   int interval;
   float temperature;
@@ -13,7 +13,7 @@ typedef struct {
   int weathercode;
 } CurrentWeather;
 
-typedef struct {
+typedef struct Response{
   double latitude;
   double longitude;
   double generationtime_ms;

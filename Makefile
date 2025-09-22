@@ -1,6 +1,6 @@
 # --- Basvariabler --
 CC 		 ?= gcc
-CFLAGS ?= -std=c11 -Iinclude -Wall -Wextra -O2 -MMD -MP -lcurl
+CFLAGS ?= -std=c11 -Iinclude -Wall -Wextra -O2 -MMD -MP -lcurl -IcJSON
 SRC := $(wildcard src/*.c)
 MODE ?= release
 LDFLAGS = -lcurl

@@ -2,110 +2,145 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "jsonparser.h"
 
-typedef struct {
-  char time[32];
-  int interval;
-  float temperature;
-  float windspeed;
-  int winddirection;
-  int is_day;
-  int weathercode;
-} CurrentWeather;
-
-typedef struct {
-  double latitude;
-  double longitude;
-  double generationtime_ms;
-  int utc_offset_seconds;
-  char timezone[16];
-  char timezone_abbreviation[8];
-  double elevation;
-  CurrentWeather current_weather;
-} Response;
-
-static void skip_ws(const char **p) {
-  while (isspace(**p)) (*p)++;
+static void skip_ws(const char **p) 
+{
+    while (isspace(**p)) 
+        (*p)++;
 }
 
-static int parse_string(const char **p, char *out, size_t maxlen) {
-  skip_ws(p);
-  if (**p != '"') return 0;
-  (*p)++;
-  size_t i = 0;
-  while (**p && **p != '"' && i < maxlen-1) {
-    out[i++] = *(*p)++;
-  }
-  out[i] = 0;
-  if (**p == '"') (*p)++;
-  return 1;
-}
-
-static int parse_number(const char **p, double *out) {
-  skip_ws(p);
-  char buf[64];
-  size_t i = 0;
-  while ((isdigit(**p) || **p == '.' || **p == '-' || **p == '+') && i < sizeof(buf)-1) {
-    buf[i++] = *(*p)++;
-  }
-  buf[i] = 0;
-  if (i == 0) return 0;
-  *out = atof(buf);
-  return 1;
-}
-
-static int parse_int(const char **p, int *out) {
-  double d;
-  if (!parse_number(p, &d)) return 0;
-  *out = (int)d;
-  return 1;
-}
-
-static int expect(const char **p, char c) {
-  skip_ws(p);
-  if (**p == c) {
+static int parse_string(const char **p, char *out, size_t maxlen) 
+{
+    skip_ws(p);
+  
+    if (**p != '"') 
+        return 0;
+    
     (*p)++;
+    size_t i = 0;
+    while (**p && **p != '"' && i < maxlen-1) 
+    {
+        out[i++] = *(*p)++;
+    }
+    out[i] = 0;
+    if (**p == '"')
+        (*p)++;
+        
     return 1;
-  }
-  return 0;
 }
 
-static int parse_current_weather(const char **p, CurrentWeather *cw) {
-  if (!expect(p, '{')) return 0;
-  while (1) {
-    char key[32];
+static int parse_number(const char **p, double *out) 
+{
     skip_ws(p);
-    if (**p == '}') { (*p)++; break; }
-    if (!parse_string(p, key, sizeof(key))) return 0;
-    skip_ws(p);
-    if (!expect(p, ':')) return 0;
-    if (strcmp(key, "time") == 0) {
-      if (!parse_string(p, cw->time, sizeof(cw->time))) return 0;
-    } else if (strcmp(key, "interval") == 0) {
-      if (!parse_int(p, &cw->interval)) return 0;
-    } else if (strcmp(key, "temperature") == 0) {
-      double temp;
-      if (!parse_number(p, &temp)) return 0;
-      cw->temperature = (float)temp;
-    } else if (strcmp(key, "windspeed") == 0) {
-      double ws;
-      if (!parse_number(p, &ws)) return 0;
-      cw->windspeed = (float)ws;
-    } else if (strcmp(key, "winddirection") == 0) {
-      if (!parse_int(p, &cw->winddirection)) return 0;
-    } else if (strcmp(key, "is_day") == 0) {
-      if (!parse_int(p, &cw->is_day)) return 0;
-    } else if (strcmp(key, "weathercode") == 0) {
-      if (!parse_int(p, &cw->weathercode)) return 0;
-    } else {
-      // skip unknown value
-      while (**p && **p != ',' && **p != '}') (*p)++;
+    char buf[64];
+    size_t i = 0;
+    
+    while ((isdigit(**p) || **p == '.' || **p == '-' || **p == '+') && i < sizeof(buf)-1) 
+    {
+        buf[i++] = *(*p)++;
     }
+    
+    buf[i] = 0;
+    if (i == 0) 
+        return 0;
+        
+    *out = atof(buf);
+    
+    return 1;
+}
+
+static int parse_int(const char **p, int *out) 
+{
+    double d;
+    if (!parse_number(p, &d)) 
+        return 0;
+        
+    *out = (int)d;
+    return 1;
+}
+
+static int expect(const char **p, char c) 
+{
     skip_ws(p);
-    if (**p == ',') (*p)++;
-    else if (**p == '}') { (*p)++; break; }
-  }
-  return 1;
+    if (**p == c) 
+    {
+        (*p)++;
+        return 1;
+    }
+    
+    return 0;
+}
+
+static int parse_current_weather(const char **p, CurrentWeather *cw) 
+{
+    if (!expect(p, '{')) 
+    return 0;
+  
+    while (1) 
+    {
+        char key[32];
+        skip_ws(p);
+      
+        if (**p == '}') 
+        { 
+            (*p)++;
+            break; 
+        }
+      
+        if (!parse_string(p, key, sizeof(key))) 
+            return 0;
+        
+        skip_ws(p);
+      
+        if (!expect(p, ':')) return 0;
+      
+        if (strcmp(key, "time") == 0) 
+        {
+            if (!parse_string(p, cw->time, sizeof(cw->time))) return 0;
+        } 
+        else if (strcmp(key, "interval") == 0) 
+        {
+            if (!parse_int(p, &cw->interval)) return 0;
+        } 
+        else if (strcmp(key, "temperature") == 0) 
+        {
+            double temp;
+            if (!parse_number(p, &temp)) return 0;
+            cw->temperature = (float)temp;
+        } 
+        else if (strcmp(key, "windspeed") == 0) 
+        {
+            double ws;
+            if (!parse_number(p, &ws)) return 0;
+            cw->windspeed = (float)ws;
+        } 
+        else if (strcmp(key, "winddirection") == 0) 
+        {
+            if (!parse_int(p, &cw->winddirection)) return 0;
+        } 
+        else if (strcmp(key, "is_day") == 0) 
+        {
+            if (!parse_int(p, &cw->is_day)) return 0;
+        } 
+        else if (strcmp(key, "weathercode") == 0) 
+        {
+            if (!parse_int(p, &cw->weathercode)) return 0;
+        } 
+        else 
+        {
+            // skip unknown value
+            while (**p && **p != ',' && **p != '}') (*p)++;
+        }
+        skip_ws(p);
+        if (**p == ',') (*p)++;
+        else if (**p == '}') 
+        { 
+            (*p)++; 
+            break; 
+        }
+    }
+    return 1;
 }
 
 int parse_response(const char *json, Response *resp) {
